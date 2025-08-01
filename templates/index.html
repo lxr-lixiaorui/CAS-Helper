@@ -1,0 +1,84 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FuckWFLA CAS assistant</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <style>
+        body { padding: 20px; background-color: #f8f9fa; }
+        .card { border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .mode-btn { transition: all 0.3s; }
+        .mode-btn.active { transform: scale(1.05); box-shadow: 0 0 10px rgba(13,110,253,0.5); }
+        #output { min-height: 120px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card p-4 mb-4">
+                    <h1 class="text-center mb-4">FuckWFLA CAS assistant</h1>
+                    
+                    <div class="mb-3">
+                        <label for="promptInput" class="form-label">Enter key phrases:</label>
+                        <textarea class="form-control" id="promptInput" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Mode:</label>
+                        <div class="d-flex justify-content-around">
+                            <button class="btn btn-outline-primary mode-btn active" data-mode="A">CAS Record(80-100 words)</button>
+                            <button class="btn btn-outline-success mode-btn" data-mode="B">CAS Reflection(500-600 words)</button>
+                            <button class="btn btn-outline-danger mode-btn" data-mode="C">developing...</button>
+                        </div>
+                    </div>
+                    
+                    <button id="submitBtn" class="btn btn-primary w-100 py-2 mb-3">Submit</button>
+                    
+                    <div>
+                        <label class="form-label">Result:</label>
+                        <div id="output" class="bg-light p-3 rounded border" placeholder="Result will be here."></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'A';
+        
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+            });
+        });
+        
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            const prompt = document.getElementById('promptInput').value.trim();
+            const outputDiv = document.getElementById('output');
+            
+            if (!prompt) {
+                outputDiv.innerHTML = '<div class="text-danger">Empty Prompt!</div>';
+                return;
+            }
+            
+            outputDiv.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div> Processing...</div>';
+            
+            fetch('/process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt, mode: currentMode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                outputDiv.innerHTML = `<div class="result">${data.result}</div>`;
+            })
+            .catch(error => {
+                outputDiv.innerHTML = `<div class="text-danger">Error: ${error}</div>`;
+            });
+        });
+    </script>
+</body>
+</html>
